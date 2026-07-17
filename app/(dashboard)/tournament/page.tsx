@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useMemo } from "react";
 import { Globe2, AlertTriangle, ArrowRight } from "lucide-react";
 import clsx from "clsx";
@@ -129,11 +130,12 @@ export default function TournamentPage() {
                 >
                   <div className="relative h-24 shrink-0 overflow-hidden bg-surface-raised">
                     {venue.photoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <Image
                         src={venue.photoUrl}
                         alt={venue.name}
-                        className="h-full w-full object-cover opacity-80 transition-opacity group-hover:opacity-100"
+                        fill
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
+                        className="object-cover opacity-80 transition-opacity group-hover:opacity-100"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center bg-gradient-to-br from-surface-raised to-surface text-[11px] text-slate-600">

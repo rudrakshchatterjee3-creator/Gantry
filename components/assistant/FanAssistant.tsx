@@ -38,7 +38,7 @@ const TOPIC_LABELS: Record<string, string> = {
   accessibility: "OpenStreetMap",
   transport: "OpenStreetMap",
   gates: "Venue knowledge",
-  sustainability: "EPA air quality",
+  sustainability: "EPA air quality + real transit data",
   fallback: "Offline fallback",
 };
 

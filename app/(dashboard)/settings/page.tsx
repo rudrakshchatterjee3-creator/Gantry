@@ -53,6 +53,23 @@ const CONFIG_GROUPS = [
       },
     ],
   },
+  {
+    title: "Sustainability",
+    rows: [
+      {
+        label: "Transit density",
+        value: "Live — real OSM transit stop count within 2km of the venue (Overpass, no key needed)",
+      },
+      {
+        label: "Emissions comparison",
+        value: "General EPA/FTA reference figures, not a live per-venue carbon reading",
+      },
+      {
+        label: "Grid carbon intensity (WattTime)",
+        value: "Not shown — available account is scoped to California, not any of the 16 venues' grids",
+      },
+    ],
+  },
 ];
 
 export default function SettingsPage() {

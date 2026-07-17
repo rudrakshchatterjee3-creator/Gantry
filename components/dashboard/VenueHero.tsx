@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useVenueStore } from "@/lib/store/useVenueStore";
 import { useAmbientTelemetry } from "@/lib/store/useAmbientTelemetry";
 import { useCurrentVenueResolutions } from "@/lib/store/useStadiumStore";
@@ -51,12 +52,14 @@ export function VenueHero() {
     <div className="relative h-48 shrink-0 overflow-hidden rounded-lg border border-surface-border sm:h-56">
       {venue.photoUrl ? (
         <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             key={venue.id}
             src={venue.photoUrl}
             alt={`${venue.name} exterior, ${venue.city}`}
-            className="absolute inset-0 h-full w-full object-cover"
+            fill
+            priority
+            sizes="(max-width: 640px) 100vw, 66vw"
+            className="object-cover"
           />
           <div
             className="absolute inset-0"
