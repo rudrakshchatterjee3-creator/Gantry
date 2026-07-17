@@ -99,6 +99,14 @@ export function VenueMap() {
       center: [venue.lon, venue.lat],
       zoom: 15.2,
       attributionControl: false,
+      // Without this, MapLibre's default scrollZoom captures the mouse
+      // wheel the instant the cursor passes over the map — the page scroll
+      // stops dead and the map zooms instead. That reads exactly like
+      // scroll lag/stutter to a user who wasn't trying to zoom the map at
+      // all. cooperativeGestures requires Ctrl/Cmd+scroll to zoom (shows a
+      // "use ctrl + scroll to zoom" hint on a plain scroll attempt instead),
+      // the standard fix for a map embedded in a normally-scrolling page.
+      cooperativeGestures: true,
     });
     map.addControl(new maplibregl.AttributionControl({ compact: true }));
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");

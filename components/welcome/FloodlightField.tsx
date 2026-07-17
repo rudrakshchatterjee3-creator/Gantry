@@ -3,14 +3,20 @@
 import { motion } from "framer-motion";
 
 // Ambient background: soft drifting floodlight glows + a faint gantry-truss
-// grid, echoing the brand mark without repeating the logo itself. Pure CSS/
-// SVG, no images, so it's cheap and themeable.
+// grid, echoing the brand mark without repeating the logo itself.
+//
+// Was 5 simultaneous infinitely-animating blur-3xl (64px filter blur)
+// regions, position: fixed behind a page that's almost entirely scroll
+// (hero + 3 feature sections + CTA). CSS filter:blur doesn't composite as
+// cheaply as a pure transform — animating several large blurred regions at
+// once forces the browser to repeatedly repaint them, which is exactly what
+// causes visible scroll jank on a long page like this one. Cut to 3 glows
+// and a lighter blur radius (blur-2xl instead of blur-3xl) — noticeably
+// cheaper to paint while still reading as the same soft ambient glow.
 const GLOWS = [
-  { x: "10%", y: "15%", size: 420, color: "#2DD4E8", duration: 22, delay: 0 },
-  { x: "78%", y: "8%", size: 340, color: "#22C55E", duration: 26, delay: 2 },
-  { x: "85%", y: "70%", size: 480, color: "#2DD4E8", duration: 30, delay: 4 },
-  { x: "15%", y: "78%", size: 360, color: "#F5A623", duration: 24, delay: 1 },
-  { x: "48%", y: "45%", size: 300, color: "#2DD4E8", duration: 20, delay: 3 },
+  { x: "10%", y: "15%", size: 380, color: "#2DD4E8", duration: 24, delay: 0 },
+  { x: "80%", y: "12%", size: 320, color: "#22C55E", duration: 28, delay: 2 },
+  { x: "20%", y: "75%", size: 340, color: "#F5A623", duration: 26, delay: 1 },
 ];
 
 export function FloodlightField() {
@@ -28,7 +34,7 @@ export function FloodlightField() {
       {GLOWS.map((glow, i) => (
         <motion.div
           key={i}
-          className="absolute rounded-full blur-3xl"
+          className="absolute rounded-full blur-2xl will-change-transform"
           style={{
             left: glow.x,
             top: glow.y,
