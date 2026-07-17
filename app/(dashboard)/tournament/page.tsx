@@ -129,9 +129,17 @@ export default function TournamentPage() {
                   )}
                 >
                   <div className="relative h-24 shrink-0 overflow-hidden bg-surface-raised">
-                    {venue.photoUrl ? (
+                    {venue.photoThumbUrl ? (
                       <Image
-                        src={venue.photoUrl}
+                        // A real ~330px Wikimedia-generated thumbnail, not
+                        // the full-resolution hero photo — with 16 tiles on
+                        // this page and next/image unable to resize itself
+                        // on Cloudflare (see next.config.js), serving the
+                        // full-size original here meant the browser had to
+                        // decode a multi-hundred-KB/MB image just to show
+                        // it at 96px, causing real scroll jank as each tile
+                        // entered view.
+                        src={venue.photoThumbUrl}
                         alt={venue.name}
                         fill
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"

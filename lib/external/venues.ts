@@ -5,7 +5,16 @@
 // was re-verified via Wikidata's search API + entity data, and US county
 // FIPS codes were verified directly against the live Census API). Photos are
 // real Wikimedia Commons files, individually curl-verified (200, image/*)
-// during implementation — no guessed URLs.
+// during implementation — no guessed URLs. photoThumbUrl is a real,
+// server-generated ~330px Wikimedia thumbnail (fetched via their imageinfo
+// API's iiurlwidth param, not a guessed /thumb/.../Npx- URL — Wikimedia
+// only pre-generates a small allowlist of widths per file and returns 400
+// for anything else, so the URL pattern can't be hand-constructed
+// reliably). Used for the Tournament HQ grid's 16 small tiles, where the
+// full-resolution photoUrl (hundreds of KB, sometimes MB) was forcing the
+// browser to decode a full-size image just to show it at ~96px — real,
+// measurable scroll jank as each newly-visible tile decoded during scroll.
+// Each thumb URL individually curl-verified (200, image/jpeg, 13-47KB).
 
 export interface Venue {
   id: string;
@@ -20,6 +29,7 @@ export interface Venue {
   stateFips?: string; // US venues only — needed for Census county queries
   countyFips?: string;
   photoUrl: string | null; // null = no verified photo, hero falls back to text-only
+  photoThumbUrl: string | null; // real Wikimedia-generated ~330px thumbnail, for small contexts (Tournament HQ grid)
   photoAttributionUrl: string | null;
   capacity: number; // real seating capacity, football/soccer configuration
 }
@@ -38,6 +48,8 @@ export const VENUE_CATALOG: Venue[] = [
     stateFips: "34",
     countyFips: "003",
     photoUrl: "https://upload.wikimedia.org/wikipedia/commons/2/24/MetLife_Stadium_Exterior.jpg",
+    photoThumbUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/MetLife_Stadium_Exterior.jpg/330px-MetLife_Stadium_Exterior.jpg",
     photoAttributionUrl: "https://commons.wikimedia.org/wiki/File:MetLife_Stadium_Exterior.jpg",
     capacity: 82_500,
   },
@@ -55,6 +67,8 @@ export const VENUE_CATALOG: Venue[] = [
     countyFips: "439",
     photoUrl:
       "https://upload.wikimedia.org/wikipedia/commons/1/11/Arlington_June_2020_4_%28AT%26T_Stadium%29.jpg",
+    photoThumbUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Arlington_June_2020_4_%28AT%26T_Stadium%29.jpg/330px-Arlington_June_2020_4_%28AT%26T_Stadium%29.jpg",
     photoAttributionUrl:
       "https://commons.wikimedia.org/wiki/File:Arlington_June_2020_4_(AT%26T_Stadium).jpg",
     capacity: 80_000,
@@ -72,6 +86,8 @@ export const VENUE_CATALOG: Venue[] = [
     stateFips: "06",
     countyFips: "037",
     photoUrl: "https://upload.wikimedia.org/wikipedia/commons/b/b3/SoFi_Stadium_2023.jpg",
+    photoThumbUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/SoFi_Stadium_2023.jpg/330px-SoFi_Stadium_2023.jpg",
     photoAttributionUrl: "https://commons.wikimedia.org/wiki/File:SoFi_Stadium_2023.jpg",
     capacity: 70_240,
   },
@@ -88,6 +104,8 @@ export const VENUE_CATALOG: Venue[] = [
     stateFips: "29",
     countyFips: "095",
     photoUrl: "https://upload.wikimedia.org/wikipedia/commons/f/ff/Arrowhead_Stadium_2010.JPG",
+    photoThumbUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Arrowhead_Stadium_2010.JPG/330px-Arrowhead_Stadium_2010.JPG",
     photoAttributionUrl: "https://commons.wikimedia.org/wiki/File:Arrowhead_Stadium_2010.JPG",
     capacity: 76_416,
   },
@@ -105,6 +123,8 @@ export const VENUE_CATALOG: Venue[] = [
     countyFips: "085",
     photoUrl:
       "https://upload.wikimedia.org/wikipedia/commons/9/9b/Levi%27s_Stadium_2019-01-30_080121.jpg",
+    photoThumbUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Levi%27s_Stadium_2019-01-30_080121.jpg/330px-Levi%27s_Stadium_2019-01-30_080121.jpg",
     photoAttributionUrl:
       "https://commons.wikimedia.org/wiki/File:Levi%27s_Stadium_2019-01-30_080121.jpg",
     capacity: 68_500,
@@ -122,6 +142,8 @@ export const VENUE_CATALOG: Venue[] = [
     stateFips: "48",
     countyFips: "201",
     photoUrl: "https://upload.wikimedia.org/wikipedia/commons/3/3a/NRG_Stadium_SBLI_Outside.jpg",
+    photoThumbUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/NRG_Stadium_SBLI_Outside.jpg/330px-NRG_Stadium_SBLI_Outside.jpg",
     photoAttributionUrl: "https://commons.wikimedia.org/wiki/File:NRG_Stadium_SBLI_Outside.jpg",
     capacity: 72_220,
   },
@@ -139,6 +161,8 @@ export const VENUE_CATALOG: Venue[] = [
     countyFips: "101",
     photoUrl:
       "https://upload.wikimedia.org/wikipedia/commons/0/03/Lincoln_Financial_Field%2C_Philadelphia%2C_2024.jpg",
+    photoThumbUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Lincoln_Financial_Field%2C_Philadelphia%2C_2024.jpg/330px-Lincoln_Financial_Field%2C_Philadelphia%2C_2024.jpg",
     photoAttributionUrl:
       "https://commons.wikimedia.org/wiki/File:Lincoln_Financial_Field,_Philadelphia,_2024.jpg",
     capacity: 69_596,
@@ -157,6 +181,8 @@ export const VENUE_CATALOG: Venue[] = [
     countyFips: "121",
     photoUrl:
       "https://upload.wikimedia.org/wikipedia/commons/b/bb/Mercedes-Benz_Stadium%2C_December_2024.jpg",
+    photoThumbUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Mercedes-Benz_Stadium%2C_December_2024.jpg/330px-Mercedes-Benz_Stadium%2C_December_2024.jpg",
     photoAttributionUrl:
       "https://commons.wikimedia.org/wiki/File:Mercedes-Benz_Stadium,_December_2024.jpg",
     capacity: 71_000,
@@ -175,6 +201,8 @@ export const VENUE_CATALOG: Venue[] = [
     countyFips: "033",
     photoUrl:
       "https://upload.wikimedia.org/wikipedia/commons/5/5d/Lumen_Field_exterior%2C_July_2023.jpg",
+    photoThumbUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Lumen_Field_exterior%2C_July_2023.jpg/330px-Lumen_Field_exterior%2C_July_2023.jpg",
     photoAttributionUrl:
       "https://commons.wikimedia.org/wiki/File:Lumen_Field_exterior,_July_2023.jpg",
     capacity: 68_740,
@@ -192,6 +220,8 @@ export const VENUE_CATALOG: Venue[] = [
     stateFips: "12",
     countyFips: "086",
     photoUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d4/Hard_Rock_Stadium_2017_2.jpg",
+    photoThumbUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Hard_Rock_Stadium_2017_2.jpg/330px-Hard_Rock_Stadium_2017_2.jpg",
     photoAttributionUrl: "https://commons.wikimedia.org/wiki/File:Hard_Rock_Stadium_2017_2.jpg",
     capacity: 65_326,
   },
@@ -208,6 +238,8 @@ export const VENUE_CATALOG: Venue[] = [
     stateFips: "25",
     countyFips: "021",
     photoUrl: "https://upload.wikimedia.org/wikipedia/commons/9/9c/Gillette_Stadium02.jpg",
+    photoThumbUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Gillette_Stadium02.jpg/330px-Gillette_Stadium02.jpg",
     photoAttributionUrl: "https://commons.wikimedia.org/wiki/File:Gillette_Stadium02.jpg",
     capacity: 65_878,
   },
@@ -222,6 +254,8 @@ export const VENUE_CATALOG: Venue[] = [
     lon: -99.1506,
     timeZone: "America/Mexico_City",
     photoUrl: "https://upload.wikimedia.org/wikipedia/commons/5/5b/Estadio_Azteca1706p2.jpg",
+    photoThumbUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Estadio_Azteca1706p2.jpg/330px-Estadio_Azteca1706p2.jpg",
     photoAttributionUrl: "https://commons.wikimedia.org/wiki/File:Estadio_Azteca1706p2.jpg",
     capacity: 87_523,
   },
@@ -237,6 +271,8 @@ export const VENUE_CATALOG: Venue[] = [
     timeZone: "America/Monterrey",
     photoUrl:
       "https://upload.wikimedia.org/wikipedia/commons/e/e5/Estadio_BBVA_Bancomer_%281%29.jpg",
+    photoThumbUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Estadio_BBVA_Bancomer_%281%29.jpg/330px-Estadio_BBVA_Bancomer_%281%29.jpg",
     photoAttributionUrl:
       "https://commons.wikimedia.org/wiki/File:Estadio_BBVA_Bancomer_(1).jpg",
     capacity: 53_500,
@@ -253,6 +289,8 @@ export const VENUE_CATALOG: Venue[] = [
     timeZone: "America/Mexico_City",
     photoUrl:
       "https://upload.wikimedia.org/wikipedia/commons/e/ef/Estadio_Akron_interior_0319.jpg",
+    photoThumbUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Estadio_Akron_interior_0319.jpg/330px-Estadio_Akron_interior_0319.jpg",
     photoAttributionUrl: "https://commons.wikimedia.org/wiki/File:Estadio_Akron_interior_0319.jpg",
     capacity: 48_071,
   },
@@ -268,6 +306,8 @@ export const VENUE_CATALOG: Venue[] = [
     timeZone: "America/Vancouver",
     photoUrl:
       "https://upload.wikimedia.org/wikipedia/commons/4/42/BC_Place_Opening_Day_2011-09-30.jpg",
+    photoThumbUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/BC_Place_Opening_Day_2011-09-30.jpg/330px-BC_Place_Opening_Day_2011-09-30.jpg",
     photoAttributionUrl:
       "https://commons.wikimedia.org/wiki/File:BC_Place_Opening_Day_2011-09-30.jpg",
     capacity: 54_500,
@@ -283,6 +323,8 @@ export const VENUE_CATALOG: Venue[] = [
     lon: -79.4186,
     timeZone: "America/Toronto",
     photoUrl: "https://upload.wikimedia.org/wikipedia/commons/b/bc/Toronto_-_ON_-_BMO_Field.jpg",
+    photoThumbUrl:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Toronto_-_ON_-_BMO_Field.jpg/330px-Toronto_-_ON_-_BMO_Field.jpg",
     photoAttributionUrl: "https://commons.wikimedia.org/wiki/File:Toronto_-_ON_-_BMO_Field.jpg",
     capacity: 30_000,
   },
