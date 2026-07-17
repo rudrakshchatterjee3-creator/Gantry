@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import { generateZoneTelemetry } from "@/lib/mock-iot";
 import { useVenueStore } from "@/lib/store/useVenueStore";
+import { useStadiumStore } from "@/lib/store/useStadiumStore";
 import { SECTOR_ZONE_MAP } from "@/lib/ui/gate-sectors";
-import type { ZoneId, ZoneTelemetry } from "@/lib/types";
+import type { ZoneId, ZoneTelemetry, AnomalyResolution } from "@/lib/types";
 import type { Venue } from "@/lib/external/venues";
 
 interface VenuePoi {
@@ -73,6 +74,28 @@ function computeGateTransitWeights(
 // real Overpass/Transitland data for that venue and recomputes
 // gateTransitWeights, which feed the gate-load model on every subsequent
 // tick.
+// Reports filed from the public, unauthenticated /report/[venueId]/[gateId]
+// quick-report page arrive server-side, not through this browser tab's own
+// triggerAnomaly() call — polling is how they reach the Action Feed a
+// manager is watching. Tracked per module lifetime (resets on reload), same
+// dedupe-by-id pattern CriticalAlertWatcher already uses.
+const seenQuickReportIds = new Set<string>();
+
+async function pollQuickReports(venueId: string) {
+  try {
+    const response = await fetch(`/api/quick-reports?venueId=${venueId}`);
+    if (!response.ok) return;
+    const data: { resolutions: AnomalyResolution[] } = await response.json();
+    for (const resolution of data.resolutions ?? []) {
+      if (seenQuickReportIds.has(resolution.id)) continue;
+      seenQuickReportIds.add(resolution.id);
+      useStadiumStore.getState().recordResolution(resolution);
+    }
+  } catch {
+    // fail soft — a missed poll just means a report shows up a tick later
+  }
+}
+
 export const useAmbientTelemetry = create<AmbientTelemetryStore>((set, get) => {
   async function refreshGateWeights(venue: Venue) {
     try {
@@ -89,6 +112,7 @@ export const useAmbientTelemetry = create<AmbientTelemetryStore>((set, get) => {
     const tick = () => {
       const venue = useVenueStore.getState().selectedVenue;
       set({ readings: generateZoneTelemetry(venue, get().gateTransitWeights) });
+      void pollQuickReports(venue.id);
     };
 
     // Deferred, not called synchronously here: `get()` only returns valid

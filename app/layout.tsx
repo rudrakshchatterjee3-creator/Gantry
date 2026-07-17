@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Big_Shoulders_Display, Public_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Big_Shoulders, Public_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
 // Self-hosted via next/font — no render-blocking external font requests, no
 // silent fallback to system fonts (the previous CSS-variable-only approach
 // declared "Inter"/"JetBrains Mono" without ever loading them).
-const displayFont = Big_Shoulders_Display({
+const displayFont = Big_Shoulders({
   subsets: ["latin"],
   weight: ["600", "700", "800"],
   variable: "--font-display",

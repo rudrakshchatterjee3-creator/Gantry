@@ -1,6 +1,7 @@
 import { GATE_DENSITY_WARNING, GATE_DENSITY_CRITICAL } from "@/lib/mock-iot";
 import { VENUE_CATALOG } from "@/lib/external/venues";
 import { SelectedVenueSettingsRow } from "@/components/layout/SelectedVenueSettingsRow";
+import { GateQrCodes } from "@/components/layout/GateQrCodes";
 
 const CONFIG_GROUPS = [
   {
@@ -76,6 +77,8 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      <GateQrCodes />
 
       {CONFIG_GROUPS.map((group) => (
         <div key={group.title} className="rounded-lg border border-surface-border bg-surface-panel">

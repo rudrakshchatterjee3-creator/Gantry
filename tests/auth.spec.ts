@@ -40,6 +40,31 @@ test.describe("Unauthenticated access is blocked", () => {
     const response = await request.get("/api/venue-pois?venueId=metlife");
     expect(response.status()).toBe(401);
   });
+
+  test("quick-reports poll API rejects an unauthenticated request", async ({ request }) => {
+    // This one is easy to accidentally leave open: it's read by the
+    // dashboard's own polling, but the /report kiosk page it's paired with
+    // is intentionally public, so it's tempting to assume this route can be
+    // too — it can't, it exposes ops-visible incident data.
+    const response = await request.get("/api/quick-reports?venueId=metlife");
+    expect(response.status()).toBe(401);
+  });
+});
+
+test.describe("Quick report kiosk (intentionally public)", () => {
+  test("the report page itself is reachable without login", async ({ page }) => {
+    const response = await page.goto("/report/metlife/gate-a");
+    expect(response?.status()).toBeLessThan(400);
+    await expect(page.getByText(/north gate/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /bottleneck/i })).toBeVisible();
+  });
+
+  test("submitting a report only accepts known venue/gate/preset values", async ({ request }) => {
+    const response = await request.post("/api/quick-report", {
+      data: { venueId: "metlife", gateId: "gate-a", presetId: "not-a-real-preset" },
+    });
+    expect(response.status()).toBe(400);
+  });
 });
 
 test.describe("Landing page", () => {
