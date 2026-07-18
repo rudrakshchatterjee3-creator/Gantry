@@ -37,7 +37,7 @@ export async function getAirQuality(venue: Venue): Promise<AirQualityReading[]> 
       clearTimeout(timeout);
       if (!response.ok) return [];
 
-      const data = await response.json();
+      const data = (await response.json()) as unknown;
       if (!Array.isArray(data)) return [];
 
       return data.map((reading: { ParameterName: string; AQI: number; Category: { Name: string } }) => ({

@@ -11,6 +11,17 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "kv_namespaces": [
+    {
+      // Real Cloudflare KV namespace for official staff accounts
+      // (lib/auth/officials-kv.ts). Create it with
+      // `npx wrangler kv namespace create OFFICIALS_KV` (or via the
+      // Cloudflare dashboard: Workers & Pages > KV) and replace the
+      // placeholder id below before deploying.
+      "binding": "OFFICIALS_KV",
+      "id": "935df71cb9ba47dfba7b4924f7425ebd"
+    }
+  ],
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",

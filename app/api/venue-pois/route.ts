@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getNearbyAccessibilityAndTransit } from "@/lib/external/overpass";
 import { getTransitActivity } from "@/lib/external/transitland";
 import { getVenueById } from "@/lib/external/venues";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/auth/session";
 
 // --- Venue POIs Route ---------------------------------------------------
 // Exposes real, live geodata to the client for VenueMap.tsx and the
@@ -13,7 +13,7 @@ import { auth } from "@/auth";
 // already cache per-venue internally — this route is a thin passthrough.
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
+  const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

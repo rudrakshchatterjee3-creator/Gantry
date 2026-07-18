@@ -4,7 +4,7 @@ import { askConcierge, type ActiveIncidentSummary } from "@/lib/ai/concierge";
 import { processAnomaly } from "@/lib/ai/orchestrator";
 import { checkRateLimit } from "@/lib/external/rate-limiter";
 import { getVenueById } from "@/lib/external/venues";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/auth/session";
 
 // --- Fan Assistant Chat Route -------------------------------------------------
 // Backs components/assistant/FanAssistant.tsx. Runs a fan/staff question
@@ -33,7 +33,7 @@ function isValidPayload(
 }
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
+  const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

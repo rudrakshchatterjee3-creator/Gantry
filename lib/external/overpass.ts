@@ -108,7 +108,7 @@ async function queryMirrors(query: string): Promise<OverpassElement[]> {
     if (!response || !response.ok) continue;
 
     try {
-      const data = await response.json();
+      const data = (await response.json()) as { elements?: unknown[] };
       if (Array.isArray(data.elements)) return data.elements as OverpassElement[];
     } catch {
       continue;

@@ -36,7 +36,9 @@ export async function getActiveWeatherAlerts(venue: Venue): Promise<WeatherAlert
       clearTimeout(timeout);
       if (!response.ok) return [];
 
-      const data = await response.json();
+      const data = (await response.json()) as {
+        features?: { properties: Record<string, string> }[];
+      };
       const features = Array.isArray(data.features) ? data.features : [];
 
       return features.map((feature: { properties: Record<string, string> }) => ({

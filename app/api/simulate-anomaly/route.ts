@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processAnomaly } from "@/lib/ai/orchestrator";
 import { checkRateLimit } from "@/lib/external/rate-limiter";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/auth/session";
 
 // --- Incident Report Ingestion -----------------------------------------------
 // Backs components/reporting/IncidentReporter.tsx. Runs a staff-submitted,
@@ -25,7 +25,7 @@ function isValidIncidentPayload(body: unknown): body is { text: string } {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
+  const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

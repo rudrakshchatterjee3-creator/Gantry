@@ -1,7 +1,9 @@
 "use server";
 
-import { signOut } from "@/auth";
+import { redirect } from "next/navigation";
+import { clearSessionCookie } from "@/lib/auth/session";
 
 export async function signOutAction() {
-  await signOut({ redirectTo: "/welcome" });
+  await clearSessionCookie();
+  redirect("/welcome");
 }

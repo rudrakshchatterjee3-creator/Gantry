@@ -19,7 +19,7 @@ Every "live" number in this app is either a genuine API call or an explicitly-la
 - **Ask Gantry** — floating GenAI concierge with two modes: fan Q&A (multilingual, voice in/out via the browser's native Web Speech API, zero extra API cost) and staff incident reporting, routed through the same real AI pipeline.
 - **QR gate quick-report** — a printed QR code per gate opens a public, no-login, one-tap incident page for stadium stewards; reports relay into the authenticated dashboard's Action Feed within one poll cycle. See `SECURITY.md` for why this is safe to leave public.
 - **Anomaly / Dispatch / Security views** — full audit trail of every AI-generated forecast and dispatch order, filterable by severity, with a real resolve/dismiss workflow.
-- Google OAuth on every dashboard route; the landing/marketing page and the QR kiosk are the only intentionally public surfaces.
+- Real credential auth (Cloudflare KV-backed, PBKDF2-hashed passwords, signed session cookie — no third-party OAuth) on every dashboard route; the landing/marketing page and the QR kiosk are the only intentionally public surfaces.
 
 ## Documentation
 
@@ -41,19 +41,22 @@ npm run dev
 | Variable | Required for | Behavior if missing |
 |---|---|---|
 | `GROQ_API_KEY` | The AI pipeline and concierge | Falls back to deterministic stub logic — the app stays usable, just less nuanced |
-| `AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google sign-in | Required — see Google Cloud Console setup below |
+| `AUTH_SECRET` | Signing official session cookies | Required — sign-in throws without it |
+| `OFFICIAL_INVITE_CODE` | Gating official account signup | Required — signup always returns 403 without it |
+| `NEXT_PUBLIC_OFFICIAL_INVITE_CODE_HINT` | Showing the invite code on the signup form | Optional — leave unset to hide the hint in the UI (the server-side check still applies either way) |
 | `CENSUS_API_KEY` | Language demographics context | That section of live context is silently omitted |
 | `AIRNOW_API_KEY` | Air quality context | Silently omitted |
 | `TRANSITLAND_API_KEY` | Real bus-activity signal at MetLife | Falls back to the transit-proximity-only model |
 
-`AUTH_SECRET` can be generated with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`. Google OAuth needs a project in [Google Cloud Console](https://console.cloud.google.com/apis/credentials) with an authorized redirect URI of `http://localhost:3000/api/auth/callback/google` for local dev.
+`AUTH_SECRET` can be generated with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`. Official accounts are stored in a Cloudflare KV namespace (`OFFICIALS_KV`, see `wrangler.jsonc`) — `next dev` reaches it automatically via `initOpenNextCloudflareForDev()` (`next.config.js`), no separate wrangler process needed locally. Create the real namespace with `npx wrangler kv namespace create OFFICIALS_KV` (or via the Cloudflare dashboard) before deploying, and paste its id into `wrangler.jsonc`.
 
 ### Testing
 
 ```bash
-npm run build && npm run start   # tests run against a real production build
-npm test
+npm test   # runs opennextjs-cloudflare build + preview, then Playwright — see TESTING.md for why
 ```
+
+`npm run preview` (a real Wrangler-backed build, not `next start`) is required rather than optional here — the official-accounts KV binding only resolves in a Cloudflare-shaped runtime, and plain `next start` throws on any KV access. See `ARCHITECTURE.md`.
 
 ### Deploying
 
@@ -67,4 +70,4 @@ See [`ARCHITECTURE.md`](./ARCHITECTURE.md#deployment-cloudflare-workers-via-open
 
 ## Tech stack
 
-Next.js 15 (App Router) · TypeScript (strict) · Tailwind CSS · Zustand · MapLibre GL · Recharts · Framer Motion · NextAuth v5 (Google OAuth) · Groq (`llama-3.3-70b-versatile`) · Playwright
+Next.js 15 (App Router) · TypeScript (strict) · Tailwind CSS · Zustand · MapLibre GL · Recharts · Framer Motion · Cloudflare KV + `jose` (credential auth) · Groq (`llama-3.3-70b-versatile`) · Playwright

@@ -36,7 +36,7 @@ async function login(): Promise<string | null> {
     clearTimeout(timeout);
     if (!response.ok) return null;
 
-    const data = await response.json();
+    const data = (await response.json()) as { token?: string };
     return data.token ?? null;
   } catch {
     return null;
@@ -63,7 +63,7 @@ export async function getGridCarbonReading(): Promise<GridCarbonReading | null> 
       clearTimeout(timeout);
       if (!response.ok) return null;
 
-      const data = await response.json();
+      const data = (await response.json()) as { data?: { value?: number }[] };
       const percentile = data?.data?.[0]?.value ?? null;
 
       return {

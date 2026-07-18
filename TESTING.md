@@ -2,20 +2,26 @@
 
 ## Automated: what's real, what's honestly not
 
-`tests/auth.spec.ts` — 9 Playwright tests, all currently passing (`npm test`). Every one of them targets something a judge, an attacker, or a future edit could plausibly break, not a token "we have tests" gesture:
+`tests/auth.spec.ts` — Playwright tests, all currently passing (`npm test`). Every one of them targets something a judge, an attacker, or a future edit could plausibly break, not a token "we have tests" gesture:
 
 | Test | What it actually guards against |
 |---|---|
 | Dashboard redirects to `/welcome` when unauthenticated | The core auth gate works at the page level |
 | A deep route (`/tournament`) also redirects | The gate isn't just protecting `/`, it's a real middleware matcher, not a single hardcoded check |
 | `fan-assistant`, `simulate-anomaly`, `venue-pois`, `quick-reports` all return `401` unauthenticated | See below — this is the regression suite for a bug that actually happened |
+| Signup rejects a wrong invite code (`403`) | The invite-code gate is a real server-side check, not just a UI hint |
+| Signup rejects a short password (`400`) | The minimum-length rule is enforced server-side, not just in the form |
+| A real signup, protected-route fetch, duplicate-signup rejection, and logout, chained in one test | Proves the whole credential flow works end to end against the real KV-backed store — not mocked |
+| Login returns the identical error for "no such account" and "wrong password" | Regression guard against account-enumeration via distinguishable error messages |
 | `/report/[venueId]/[gateId]` is reachable without login | The intentionally-public kiosk page hasn't been accidentally locked behind auth by a later middleware change |
 | `/api/quick-report` rejects an unknown preset ID with `400` | The public write endpoint's input validation still rejects bad enums, not just missing fields |
-| `/welcome` renders the hero + Google sign-in button with zero console errors | The landing page — the very first thing anyone sees — hasn't silently broken |
+| `/welcome` renders the hero + sign-in form with zero console errors | The landing page — the very first thing anyone sees — hasn't silently broken |
 
-**Why these specific tests exist, not a generic scaffold:** every one of the four `401` tests exists because those routes were, briefly, actually reachable without authentication during development — a middleware matcher change meant to fix an unrelated bug (a redirect breaking a `fetch()` call) accidentally exposed every AI-calling endpoint to the open internet. The fix was adding an explicit session check inside each handler; the test suite is what stops that exact mistake from landing silently a second time. See `SECURITY.md` §2 for the full account.
+**Why the four `401` tests specifically exist, not a generic scaffold:** those routes were, briefly, actually reachable without authentication during development — a middleware matcher change meant to fix an unrelated bug (a redirect breaking a `fetch()` call) accidentally exposed every AI-calling endpoint to the open internet. The fix was adding an explicit session check inside each handler; the test suite is what stops that exact mistake from landing silently a second time. See `SECURITY.md` §2 for the full account.
 
-**Why there's no scripted full-login E2E test.** The entire dashboard sits behind real Google OAuth. Scripting a real login in an automated suite means either storing real Google account credentials in CI (a genuine secret-management liability for a hackathon project with no dedicated CI secrets vault) or mocking the OAuth flow (which would then be testing the mock, not the real auth boundary). Rather than fake this, the suite tests the boundary itself — *is the door actually locked* — which is arguably the more important property to verify, and doesn't require pretending to solve a problem (secure credential storage in CI) that wasn't actually solved.
+**Why there IS now a scripted full-login E2E test, when there wasn't before.** GANTRY originally sat behind Google OAuth, which made a scripted login impossible to test honestly in CI without either storing real Google credentials (a secret-management liability with no dedicated CI vault) or mocking the OAuth flow (testing the mock, not the real boundary) — so the suite only tested the boundary from outside. Switching to real credential auth (KV-backed signup/login, no third-party provider — see `SECURITY.md` §1 and `ARCHITECTURE.md`) removed that constraint entirely: signup, protected-route access, and logout are now driven end to end against the actual account store in every test run, which is a strictly stronger guarantee than the boundary-only tests it's layered on top of.
+
+**Local KV in tests.** Playwright's `webServer` runs `npm run preview` (`opennextjs-cloudflare build && opennextjs-cloudflare preview`), not `next start` — a Wrangler-backed server is required for `getCloudflareContext()` (and therefore the real `OFFICIALS_KV` binding) to resolve at all; plain `next start` throws on any KV access. See `playwright.config.ts` and the deployment section of `ARCHITECTURE.md`.
 
 ## Manual: what was actually driven end-to-end, with evidence
 

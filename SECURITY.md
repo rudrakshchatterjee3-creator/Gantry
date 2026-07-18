@@ -4,20 +4,36 @@ This document is a real account of GANTRY's security posture, including the vuln
 
 ## 1. Authentication
 
-Every dashboard route sits behind real Google OAuth (`next-auth` v5 / Auth.js, `auth.ts`), enforced by `middleware.ts`:
+GANTRY uses real credential-based auth for stadium officials, not a third-party OAuth provider — a deliberate switch away from an earlier Google OAuth build, made because a FIFA official's access to an operations dashboard shouldn't depend on them having (or wanting to use) a personal Google account, and because owning the credential store end to end makes the actual access-control logic auditable in this repo rather than delegated to an opaque provider flow.
+
+**Storage.** Official accounts live in a real Cloudflare KV namespace (`OFFICIALS_KV`, `wrangler.jsonc`), keyed `official:<email>`, holding `{ email, passwordHash, createdAt }` — never a plaintext password (`lib/auth/officials-kv.ts`).
+
+**Password hashing.** PBKDF2-SHA256, 100,000 iterations (OWASP's current minimum recommendation for that algorithm), via the Web Crypto API (`lib/auth/password.ts`) — not bcrypt/argon2, because those need a native binding that doesn't exist in the Cloudflare Workers runtime this app deploys to. Verification uses a constant-time comparison, not `===`, so a timing side-channel can't leak how many leading bytes of a guessed hash matched.
+
+**Sessions.** A signed HS256 JWT (via `jose`, the same library NextAuth used internally) in an `HttpOnly`, `Secure`, `SameSite=Lax` cookie (`lib/auth/session.ts`) — unreadable and unmodifiable from client JS, and rejected by the server if the signature or expiry (7 days) doesn't check out.
+
+**Signup gating.** Account creation (`/api/auth/signup`) requires a shared invite code (`OFFICIAL_INVITE_CODE` env var) checked server-side — not open self-registration. For this hackathon deployment the code is deliberately shown on the signup form itself (`NEXT_PUBLIC_OFFICIAL_INVITE_CODE_HINT`) so judges can reach the dashboard with zero friction; that's a demo-access tradeoff, disclosed here rather than hidden, not a claim that this is a vetted-identity system. In a real deployment, unsetting the `NEXT_PUBLIC_` hint (while keeping the server-side `OFFICIAL_INVITE_CODE` check) hides the code from the UI without changing the actual access control.
+
+`middleware.ts` verifies that session cookie on every request to a protected route:
 
 ```ts
-export default auth((req) => {
-  if (!req.auth) {
+export default async function middleware(req: NextRequest) {
+  const token = req.cookies.get(SESSION_COOKIE_NAME)?.value;
+  const session = token ? await verifySessionToken(token) : null;
+  if (!session) {
     return NextResponse.redirect(new URL("/welcome", req.nextUrl));
   }
-});
+}
 ```
 
 Two routes are deliberately excluded from this gate, both with a documented reason rather than a silent gap:
 
-- **`/welcome`** — the pre-auth landing page; excluding it is required for anyone to reach the sign-in button at all.
+- **`/welcome`** — the pre-auth landing page; excluding it is required for anyone to reach the sign-in form at all.
 - **`/report/[venueId]/[gateId]`** — the QR-code quick-report kiosk page. A gate steward scanning a printed code on matchday isn't signed into the ops dashboard, so this page is intentionally public. See §3 for how the *submission endpoint* behind it stays safe despite having no auth.
+
+**Login response uniformity.** `/api/auth/login` returns the exact same `401` body for "no such account" and "wrong password" (`lib/auth/session.ts` callers in `app/api/auth/login/route.ts`) — a distinct message for each would let an attacker enumerate valid official emails one guess at a time. Covered by a test in `tests/auth.spec.ts`.
+
+**Brute-force protection.** Both `/api/auth/login` and `/api/auth/signup` are rate-limited per source IP (10 requests/minute, `lib/external/rate-limiter.ts`, keyed off the `cf-connecting-ip` header Cloudflare sets) — tighter than the per-process limits on the AI routes, since credential endpoints are a guessing target in a way those aren't.
 
 ## 2. A real vulnerability that was found and fixed here, not hypothetical
 
@@ -74,7 +90,7 @@ The actual text that reaches the LLM pipeline is built server-side from a fixed 
 
 ## 4. Secrets
 
-No API key, OAuth secret, or credential is hardcoded anywhere in source. All of them — `GROQ_API_KEY`, `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`, `AUTH_SECRET`, `CENSUS_API_KEY`, `AIRNOW_API_KEY`, `TRANSITLAND_API_KEY` — are read from `process.env` and live only in `.env.local`, which is git-ignored (`.env*.local` in `.gitignore`). `.env.example` documents every variable name with an empty value, so the repo is self-documenting about what configuration it needs without exposing what that configuration actually is. Real secrets pasted into chat during development were flagged for rotation at the time, on the same principle.
+No API key or credential is hardcoded anywhere in source. All of them — `GROQ_API_KEY`, `AUTH_SECRET` (session JWT signing key), `OFFICIAL_INVITE_CODE`, `CENSUS_API_KEY`, `AIRNOW_API_KEY`, `TRANSITLAND_API_KEY` — are read from `process.env` and live only in `.env.local`, which is git-ignored (`.env*.local` in `.gitignore`). `.env.example` documents every variable name with an empty value, so the repo is self-documenting about what configuration it needs without exposing what that configuration actually is. Real secrets pasted into chat during development were flagged for rotation at the time, on the same principle. The Google OAuth client secret used by the earlier NextAuth build is no longer read anywhere in this codebase now that credential auth replaced it.
 
 ## 5. Rate limiting
 

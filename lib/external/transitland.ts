@@ -47,7 +47,7 @@ export async function getTransitActivity(venue: Venue): Promise<TransitActivity 
       clearTimeout(timeout);
       if (!response.ok) return null;
 
-      const data = await response.json();
+      const data = (await response.json()) as { stops?: unknown[] };
       const stops = Array.isArray(data.stops) ? data.stops : [];
 
       return { feedOnestopId: NJ_TRANSIT_BUS_FEED, nearbyStopCount: stops.length };

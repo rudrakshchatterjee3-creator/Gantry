@@ -110,7 +110,7 @@ export default function TournamentPage() {
           <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
             {COUNTRY_LABELS[country]}
           </h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
             {venues.map((venue) => {
               const resolutions = resolutionsByVenue[venue.id] ?? [];
               const openCount = resolutions.filter((r) => r.status === "open").length;
@@ -150,9 +150,10 @@ export default function TournamentPage() {
                         No photo
                       </div>
                     )}
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-black/50 to-transparent" />
                     <div
                       className={clsx(
-                        "absolute right-2 top-2 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                        "absolute right-2 top-2 flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold shadow-sm backdrop-blur-sm",
                         styles.badge
                       )}
                     >

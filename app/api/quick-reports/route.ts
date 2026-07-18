@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRecentQuickReports } from "@/lib/external/quick-report-store";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/auth/session";
 
 // --- Quick Report Poll ---------------------------------------------------
 // Read side of the quick-report relay (see lib/external/quick-report-store.ts).
@@ -10,7 +10,7 @@ import { auth } from "@/auth";
 // routes — this is ops-visible data, not public.
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
+  const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

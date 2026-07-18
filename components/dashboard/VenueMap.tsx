@@ -141,8 +141,8 @@ export function VenueMap() {
     poiMarkersRef.current = [];
 
     fetch(`/api/venue-pois?venueId=${venue.id}`)
-      .then((res) => res.json())
-      .then((data: { pois: VenuePoi[] }) => {
+      .then((res) => res.json() as Promise<{ pois: VenuePoi[] }>)
+      .then((data) => {
         for (const poi of data.pois ?? []) {
           const color = POI_CATEGORY_HEX[poi.category] ?? "#94a3b8";
           const marker = new maplibregl.Marker({ element: poiMarkerElement(color) })

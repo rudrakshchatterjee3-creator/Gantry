@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { GantryMark } from "@/components/brand/GantryLogo";
-import { GoogleSignInButton } from "@/components/welcome/GoogleSignInButton";
 
 export function Hero() {
   return (
@@ -42,7 +41,12 @@ export function Hero() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.45 }}
       >
-        <GoogleSignInButton />
+        <a
+          href="#sign-in"
+          className="rounded-lg bg-floodlight px-6 py-3 font-sans text-sm font-semibold text-surface transition-transform hover:scale-[1.02] active:scale-[0.98]"
+        >
+          Sign in to GANTRY
+        </a>
       </motion.div>
 
       <motion.div

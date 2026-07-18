@@ -1,3 +1,10 @@
+const { initOpenNextCloudflareForDev } = require("@opennextjs/cloudflare");
+
+// Lets `next dev` reach the real KV binding (lib/auth/officials-kv.ts) via a
+// local Miniflare-simulated Cloudflare environment, so local dev needs no
+// wrangler flow of its own — same real code path runs in production.
+initOpenNextCloudflareForDev();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {

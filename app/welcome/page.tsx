@@ -4,7 +4,7 @@ import { FeatureScene } from "@/components/welcome/FeatureScene";
 import { GateLoadDemo } from "@/components/welcome/motion/GateLoadDemo";
 import { ConciergeDemo } from "@/components/welcome/motion/ConciergeDemo";
 import { VenueSwitchDemo } from "@/components/welcome/motion/VenueSwitchDemo";
-import { GoogleSignInButton } from "@/components/welcome/GoogleSignInButton";
+import { OfficialAuthForm } from "@/components/welcome/OfficialAuthForm";
 
 export default function WelcomePage() {
   return (
@@ -38,14 +38,14 @@ export default function WelcomePage() {
         <VenueSwitchDemo />
       </FeatureScene>
 
-      <section className="flex flex-col items-center gap-6 px-6 py-28 text-center">
+      <section id="sign-in" className="flex flex-col items-center gap-6 px-6 py-28 text-center">
         <h2 className="font-display text-3xl font-bold uppercase text-floodlight sm:text-4xl">
           Ready for kickoff.
         </h2>
         <p className="max-w-md text-sm text-slate-400">
           Sign in to open the operations dashboard.
         </p>
-        <GoogleSignInButton />
+        <OfficialAuthForm />
       </section>
     </div>
   );
