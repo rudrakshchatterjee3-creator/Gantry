@@ -59,7 +59,19 @@ export async function POST(request: NextRequest) {
 
   const expectedInviteCode = getAuthEnvVar("OFFICIAL_INVITE_CODE");
   if (!expectedInviteCode || inviteCode !== expectedInviteCode) {
-    return NextResponse.json({ error: "Invalid invite code." }, { status: 403 });
+    // TEMPORARY debug — remove after diagnosing the invite-code env var issue.
+    return NextResponse.json(
+      {
+        error: "Invalid invite code.",
+        debug: {
+          expectedIsSet: Boolean(expectedInviteCode),
+          expectedLength: expectedInviteCode?.length ?? 0,
+          receivedLength: inviteCode.length,
+          match: inviteCode === expectedInviteCode,
+        },
+      },
+      { status: 403 }
+    );
   }
 
   if (!isValidEmail(email)) {
