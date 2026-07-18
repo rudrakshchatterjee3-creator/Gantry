@@ -3,7 +3,6 @@ import { hashPassword } from "@/lib/auth/password";
 import { createOfficial, getOfficial } from "@/lib/auth/officials-kv";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
 import { getAuthEnvVar } from "@/lib/auth/env";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { checkRateLimit } from "@/lib/external/rate-limiter";
 
 // --- Official Signup -----------------------------------------------------
@@ -60,31 +59,7 @@ export async function POST(request: NextRequest) {
 
   const expectedInviteCode = getAuthEnvVar("OFFICIAL_INVITE_CODE");
   if (!expectedInviteCode || inviteCode !== expectedInviteCode) {
-    // TEMPORARY debug — remove after diagnosing the invite-code env var issue.
-    let ctxError: string | null = null;
-    let ctxEnvKeys: string[] = [];
-    try {
-      const { env } = getCloudflareContext();
-      ctxEnvKeys = Object.keys(env as object);
-    } catch (e) {
-      ctxError = e instanceof Error ? e.message : String(e);
-    }
-    return NextResponse.json(
-      {
-        error: "Invalid invite code.",
-        debug: {
-          expectedIsSet: Boolean(expectedInviteCode),
-          expectedLength: expectedInviteCode?.length ?? 0,
-          receivedLength: inviteCode.length,
-          match: inviteCode === expectedInviteCode,
-          processEnvHasIt: Boolean(process.env.OFFICIAL_INVITE_CODE),
-          processEnvHasAuthSecret: Boolean(process.env.AUTH_SECRET),
-          getCloudflareContextError: ctxError,
-          cloudflareEnvKeys: ctxEnvKeys,
-        },
-      },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: "Invalid invite code." }, { status: 403 });
   }
 
   if (!isValidEmail(email)) {
