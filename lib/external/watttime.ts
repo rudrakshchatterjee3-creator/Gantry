@@ -1,4 +1,5 @@
 import { cached } from "@/lib/external/cache";
+import { getEnvVar } from "@/lib/env";
 
 // --- WattTime Grid Carbon Intensity API --------------------------------------
 // Real electricity grid carbon-intensity data for the sustainability
@@ -12,7 +13,6 @@ import { cached } from "@/lib/external/cache";
 // account/region is available.
 
 const CACHE_TTL_MS = 15 * 60 * 1000; // 15 min — WattTime signal-index updates frequently, but free tier should be conservative
-const REGION = process.env.WATTTIME_REGION ?? "CAISO_NORTH";
 
 export interface GridCarbonReading {
   region: string;
@@ -22,8 +22,8 @@ export interface GridCarbonReading {
 }
 
 async function login(): Promise<string | null> {
-  const username = process.env.WATTTIME_USERNAME;
-  const password = process.env.WATTTIME_PASSWORD;
+  const username = getEnvVar("WATTTIME_USERNAME");
+  const password = getEnvVar("WATTTIME_PASSWORD");
   if (!username || !password) return null;
 
   try {
@@ -49,6 +49,7 @@ async function login(): Promise<string | null> {
  * null if credentials are missing or the API call fails.
  */
 export async function getGridCarbonReading(): Promise<GridCarbonReading | null> {
+  const region = getEnvVar("WATTTIME_REGION") ?? "CAISO_NORTH";
   return cached("watttime:signal-index", CACHE_TTL_MS, async () => {
     const token = await login();
     if (!token) return null;
@@ -57,7 +58,7 @@ export async function getGridCarbonReading(): Promise<GridCarbonReading | null> 
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 10_000);
       const response = await fetch(
-        `https://api.watttime.org/v3/signal-index?region=${REGION}&signal_type=co2_moer`,
+        `https://api.watttime.org/v3/signal-index?region=${region}&signal_type=co2_moer`,
         { headers: { Authorization: `Bearer ${token}` }, signal: controller.signal }
       );
       clearTimeout(timeout);
@@ -67,7 +68,7 @@ export async function getGridCarbonReading(): Promise<GridCarbonReading | null> 
       const percentile = data?.data?.[0]?.value ?? null;
 
       return {
-        region: REGION,
+        region,
         isVenueRegion: false, // CAISO_NORTH != PJM (MetLife Stadium's actual grid)
         percentile,
         fetchedAt: new Date().toISOString(),

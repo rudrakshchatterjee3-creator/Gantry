@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { hashPassword } from "@/lib/auth/password";
 import { createOfficial, getOfficial } from "@/lib/auth/officials-kv";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
-import { getAuthEnvVar } from "@/lib/auth/env";
+import { getEnvVar } from "@/lib/env";
 import { checkRateLimit } from "@/lib/external/rate-limiter";
 
 // --- Official Signup -----------------------------------------------------
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const expectedInviteCode = getAuthEnvVar("OFFICIAL_INVITE_CODE");
+  const expectedInviteCode = getEnvVar("OFFICIAL_INVITE_CODE");
   if (!expectedInviteCode || inviteCode !== expectedInviteCode) {
     return NextResponse.json({ error: "Invalid invite code." }, { status: 403 });
   }

@@ -6,8 +6,9 @@
 // `undefined` if this ever ends up in a client bundle, which is the
 // intended fail-safe rather than leaking the key to the browser.
 
+import { getEnvVar } from "@/lib/env";
+
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile";
 const REQUEST_TIMEOUT_MS = 15_000;
 
 interface GroqJSONCallParams {
@@ -23,10 +24,11 @@ interface GroqJSONCallParams {
  * even without a configured key or if Groq is unreachable.
  */
 export async function callGroqJSON<T>({ system, user }: GroqJSONCallParams): Promise<T> {
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = getEnvVar("GROQ_API_KEY");
   if (!apiKey) {
     throw new Error("GROQ_API_KEY is not configured");
   }
+  const model = getEnvVar("GROQ_MODEL") ?? "llama-3.3-70b-versatile";
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -39,7 +41,7 @@ export async function callGroqJSON<T>({ system, user }: GroqJSONCallParams): Pro
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: GROQ_MODEL,
+        model,
         messages: [
           { role: "system", content: system },
           { role: "user", content: user },

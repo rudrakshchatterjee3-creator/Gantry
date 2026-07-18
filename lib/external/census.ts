@@ -1,5 +1,6 @@
 import { cached } from "@/lib/external/cache";
 import type { Venue } from "@/lib/external/venues";
+import { getEnvVar } from "@/lib/env";
 
 // --- US Census Bureau ACS API -------------------------------------------------
 // Real demographic data grounding for the multilingual feature: instead of
@@ -30,7 +31,7 @@ export interface LanguageDemographics {
  * data," not zero speakers.
  */
 export async function getLanguageDemographics(venue: Venue): Promise<LanguageDemographics | null> {
-  const apiKey = process.env.CENSUS_API_KEY;
+  const apiKey = getEnvVar("CENSUS_API_KEY");
   if (!apiKey || !venue.stateFips || !venue.countyFips) return null;
 
   return cached(`census:language:${venue.id}`, CACHE_TTL_MS, async () => {

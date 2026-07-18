@@ -1,5 +1,6 @@
 import { cached } from "@/lib/external/cache";
 import type { Venue } from "@/lib/external/venues";
+import { getEnvVar } from "@/lib/env";
 
 // --- Transitland API ----------------------------------------------------------
 // Real transit data for MetLife Stadium via Transitland (transit.land), which
@@ -32,7 +33,7 @@ export interface TransitActivity {
  * unset or the request fails.
  */
 export async function getTransitActivity(venue: Venue): Promise<TransitActivity | null> {
-  const apiKey = process.env.TRANSITLAND_API_KEY;
+  const apiKey = getEnvVar("TRANSITLAND_API_KEY");
   if (!apiKey || venue.id !== "metlife") return null;
 
   return cached(`transitland:stops:${venue.id}`, CACHE_TTL_MS, async () => {

@@ -1,5 +1,6 @@
 import { cached } from "@/lib/external/cache";
 import type { Venue } from "@/lib/external/venues";
+import { getEnvVar } from "@/lib/env";
 
 // --- EPA AirNow API -----------------------------------------------------------
 // Real, live US government air quality data for the venue's coordinates —
@@ -21,7 +22,7 @@ export interface AirQualityReading {
  * Returns [] if AIRNOW_API_KEY is unset or the request fails.
  */
 export async function getAirQuality(venue: Venue): Promise<AirQualityReading[]> {
-  const apiKey = process.env.AIRNOW_API_KEY;
+  const apiKey = getEnvVar("AIRNOW_API_KEY");
   if (!apiKey) return [];
 
   return cached(`airnow:current:${venue.id}`, CACHE_TTL_MS, async () => {

@@ -1,6 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
-import { getAuthEnvVar } from "@/lib/auth/env";
+import { getEnvVar } from "@/lib/env";
 
 // Signed, HttpOnly session cookie — replaces NextAuth's session handling.
 // jose is Edge/Workers-safe (pure Web Crypto under the hood), same library
@@ -15,7 +15,7 @@ export interface OfficialSession {
 }
 
 function getSecretKey(): Uint8Array {
-  const secret = getAuthEnvVar("AUTH_SECRET");
+  const secret = getEnvVar("AUTH_SECRET");
   if (!secret) {
     throw new Error(
       "AUTH_SECRET is not set — required to sign/verify session cookies. Generate one with: node -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\""
