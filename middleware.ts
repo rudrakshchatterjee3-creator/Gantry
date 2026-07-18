@@ -12,4 +12,9 @@ export default async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: ["/((?!welcome|report|api|_next/static|_next/image|icon.svg|favicon.ico).*)"],
+  // Next.js middleware runs on the Edge runtime by default, which OpenNext's
+  // Cloudflare adapter doesn't instrument with its request context —
+  // getCloudflareContext() (used transitively via lib/auth/env.ts to read
+  // the real AUTH_SECRET) needs the Node.js runtime to work here.
+  runtime: "nodejs",
 };
