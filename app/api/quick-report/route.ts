@@ -33,6 +33,9 @@ function isValidPayload(body: unknown): body is { venueId: string; gateId: strin
 }
 
 export async function POST(request: NextRequest) {
+  // Global key, not per-IP — see the same note in app/api/fan-assistant/route.ts.
+  // This route is reachable without login (see SECURITY.md §3), so a global
+  // cap matters even more here than on the authenticated AI routes.
   if (!checkRateLimit("quick-report", RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)) {
     return NextResponse.json(
       { error: "Too many reports — please wait a moment and try again." },

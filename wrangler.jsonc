@@ -22,6 +22,9 @@
   "vars": {
     "OFFICIAL_INVITE_CODE": "GANTRY2026"
   },
+  // Protects the `vars` above from being wiped by a future deploy that
+  // doesn't explicitly redeclare them — not the original fix for the
+  // dashboard-injection bug (declaring vars here was), but cheap insurance.
   "keep_vars": true,
   "observability": {
     "enabled": true

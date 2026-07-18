@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Global key, not per-IP — see the same note in app/api/fan-assistant/route.ts.
   if (!checkRateLimit("simulate-anomaly", RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)) {
     return NextResponse.json(
       { error: "Too many requests — please wait a moment and try again." },

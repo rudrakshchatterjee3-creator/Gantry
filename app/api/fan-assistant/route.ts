@@ -38,6 +38,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Global key (not per-IP like /api/auth/login and /api/auth/signup) —
+  // deliberate: this caps total Groq call volume against the shared
+  // free-tier key across every concurrent user, not abuse from one client.
+  // Per-IP limiting is the right shape for a credential-guessing target;
+  // it's the wrong shape for protecting a shared upstream quota.
   if (!checkRateLimit("fan-assistant", RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)) {
     return NextResponse.json(
       { error: "Too many requests — please wait a moment and try again." },

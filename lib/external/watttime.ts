@@ -69,7 +69,10 @@ export async function getGridCarbonReading(): Promise<GridCarbonReading | null> 
 
       return {
         region,
-        isVenueRegion: false, // CAISO_NORTH != PJM (MetLife Stadium's actual grid)
+        // Derived, not hardcoded — true once WATTTIME_REGION is set to PJM
+        // (MetLife Stadium's actual grid), not just when using the default
+        // CAISO_NORTH (California) scoped to this project's free account.
+        isVenueRegion: region === "PJM",
         percentile,
         fetchedAt: new Date().toISOString(),
       };
