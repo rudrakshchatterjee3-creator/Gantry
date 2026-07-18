@@ -4,6 +4,14 @@
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-07-17",
   "compatibility_flags": ["nodejs_compat"],
+  // Without this, every `wrangler deploy` (including the one Cloudflare's
+  // git-connected build runs on each push) overwrites dashboard-set
+  // Secrets/Variables with whatever this file declares — since this file
+  // declares no `vars` block, that meant AUTH_SECRET and
+  // OFFICIAL_INVITE_CODE were being silently wiped on every deploy,
+  // regardless of what was set in the dashboard. Confirmed root cause of a
+  // real production bug: signup always rejected the invite code.
+  "keep_vars": true,
   "observability": {
     "enabled": true
   },
